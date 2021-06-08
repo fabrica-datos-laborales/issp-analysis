@@ -1,0 +1,87 @@
+---
+title: "Descriptive report"
+date: "`r format(Sys.Date(), '%d %B, %Y')`"
+author: "Valentina Andrade"
+lang: "en"
+output:
+  rmdformats::downcute:
+    self_contained: true
+    thumbnails: true
+    lightbox: true
+    gallery: true
+    highlight: tango
+    number_sections: yes
+    toc_depth: 4
+    fig_width: 6 
+    fig_height: 4 
+---
+
+
+```{r setup, include=FALSE}
+## Load packages -----------------------------
+pacman::p_load(knitr, rmdformats, tidyverse, sjPlot, sjmisc, magrittr)
+## Global options -----------------------------
+options(max.print="75")
+opts_chunk$set(echo=FALSE, cache=TRUE,
+               prompt=FALSE,tidy=TRUE,
+               comment=NA, message=FALSE,
+               warning=FALSE)
+theme_set(theme_sjplot2())
+## Load data --------------------------------
+issp <- readRDS("../data/issp.rds")
+```
+
+
+# General codebook
+
+Here you can see old and new variables, based on
+`01-procdata.R` and `02-proc-clases.R` code process.
+
+```{r view, echo=FALSE}
+view_df(issp)
+```
+
+# Univariate description
+
+## Predictors
+
+### Sociodemographics
+
+```{r sociodemo, echo = FALSE}
+issp %>% select(SEX, UNION, DEGREE, TYPORG2) %$%
+sjmisc::frq(.)
+```
+
+```{r age, echo = F}
+plot_frq(issp$AGE, type = "h", show.mean = TRUE, show.mean.val = TRUE,normal.curve = TRUE, show.sd = TRUE, normal.curve.color = "blue")
+```
+
+### Social class
+
+```{r class}
+sjPlot::plot_frq(issp$class, weight.by = issp$WEIGHT) + labs(x = "Class position", caption = "Source: E.O.Wright (1997) based on ISSP (2015)") + theme(axis.text.x = element_text(angle = -90))
+```
+
+#### Variables to construct social class position
+
+```{r variables, echo = F}
+issp %>% select(prop_salaried, control, educ, qual, skillsA, skills) %$%
+sjmisc::frq(.)
+
+```
+
+## Dependent variable
+
+The variable `conflict` come from `v42` 
+
+```{r conflict, echo = F}
+sjPlot::plot_frq(issp$conflict, weight.by = issp$WEIGHT, show.ci = T, errorbar.color = "black") + labs(x = "Relations: between management and employees", caption = "Source: E.O.Wright (1997) based on ISSP (2015)")
+```
+
+Original variable is `v42` (we report `v43` as a control)
+
+```{r v42, echo = F}
+issp %>% select(v42,v43) %$%
+sjmisc::frq(.)
+```
+
