@@ -18,7 +18,7 @@ frq(issp$TYPORG2) # 8 y 9 NA
 
 # 4. Recode ---------------------------------------------------------------
 issp <- issp %>%
-  mutate_at(vars(UNION, SEX, DEGREE, TYPORG2), funs(car::recode(., c("c(7,8,9)=NA")))) %>% 
+  mutate_at(vars(UNION, SEX, DEGREE, TYPORG2, AGE), funs(car::recode(., c("c(7,8,9,999)=NA")))) %>% 
   mutate_at(vars(v42,v43), funs(car::recode(., c("9=NA")))) %>% 
   mutate(conflict = case_when(v42 %in% c(5,4) ~ 1,
                                            TRUE ~ 0),
@@ -26,6 +26,6 @@ issp <- issp %>%
 # 5. Select  --------------------------------------------------------------
 select(country, year, SEX, AGE, DEGREE, TYPORG2, UNION, NEMPLOY, EMPREL, WRKSUP, ISCO08, WORK,
        v42, v43, conflict,
-       WEIGHT)
+       WEIGHT) %>% filter(AGE != 0)
 # 6. Save  ----------------------------------------------------------------------
 saveRDS(issp, file = "input/data/proc/issp-proc.rds")
