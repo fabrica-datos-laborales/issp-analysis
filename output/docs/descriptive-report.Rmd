@@ -84,5 +84,3 @@ Original variable is `v42` (we report `v43` as a control)
 issp %>% select(v42,v43) %$%
 sjmisc::frq(.)
 ```
-
-# Tables 
