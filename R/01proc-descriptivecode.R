@@ -1,7 +1,7 @@
 # Code Paper ----------------------------------------------------------
 # Author: Valentina Andrade
 # 1. Load packages --------------------------------------------------------
-pacman::p_load(tidyverse, sjmisc, sjPlot)
+pacman::p_load(tidyverse, sjmisc, sjPlot, magrittr)
 '%!in%' <- function(x,y)!('%in%'(x,y)) #own function
 
 # 2. Load data ------------------------------------------------------------

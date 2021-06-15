@@ -15,17 +15,21 @@ issp <- readRDS("input/data/proc/issp-proc.rds")
 
 # A.1 Filter inactive people
 # (1) WORK: Are you currently working for pay, did you work for pay in the past, or have you never been in paid work?
+frq(issp$WORK)
 issp <- filter(issp, WORK != 3) # 8 y 9 NS/NR
 
 # A.2 Create salaried workers
 # (2) EMPREL: Are/ were you an employee, self-employed, or working for your own family's business?
-issp$prop_salaried <- as.numeric(issp$EMPREL) 
+frq(issp$EMPREL)
+issp$prop_salaried <- as.numeric(issp$EMPREL)
+frq(issp$prop_salaried)
 issp$prop_salaried <- car::recode(issp$prop_salaried,recodes = "1='Salaried';c(5,2)='3.Petite bourgeoisie';3='2.Small employers';4='1.Capitalist';c(8,9)=NA", as.factor = T,
                                   levels = c("Salaried", "3.Petite bourgeoisie", "2.Small employers","1.Capitalist"))
 
 # 3.2 Salaried workers ---------------------------------------------------------
 # A.1 Supervisan ---------------------------------------------------------------
 # WRKSUP #Do/ did you supervise other employees? Yes/No
+frq(issp$WRKSUP)
 issp$control <- as.numeric(issp$WRKSUP)
 issp$control <- car::recode(issp$control,recodes = "1='Control';2='No control';99=NA",as.factor =T, 
                             levels = c("Control", "No control"))
@@ -34,8 +38,10 @@ issp$control <- car::recode(issp$control,recodes = "1='Control';2='No control';9
 # ISCO08: In your main job, what kind of activities do/ did you do most of the time?
 
 ## (A) Education (to control)---------------------------------------------------
+frq(issp$DEGREE)
 issp$educ <- as.numeric(issp$DEGREE)
 issp$educ <- car::recode(issp$educ, recodes = c("0:5='No';6:9='Yes';c(88,99)=NA"))
+frq(issp$educ)
 
 ## (B) ISCO 08 ---------------------------------------------------------------------
 # A.2.1 Numeric
@@ -61,6 +67,7 @@ issp <- issp %>% mutate(skills = if_else(skillsA =="Experts" & educ=="Yes", "Exp
                                          if_else(skillsA == "Experts" & educ=="No", "Skilled", skillsA)),
                         qual = case_when(isco_2 %in% c(11:44) ~ 1,
                                          isco_2 %in% c(51:96) ~ 2, TRUE ~ NA_real_))
+#Note: variable 'qual' used later to distinguis petite bourgeoise from informal self-employed
 # Correct experts and skilled workers (+skilled)
 
 # 4. Final class variable ------------------------------------------------------
@@ -76,6 +83,7 @@ issp$class <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" &
 issp$class <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Skilled", 8, class))
 issp$class <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Unskilled", 9, class))
 issp$class <- with(issp, ifelse(prop_salaried=="3.Petite bourgeoisie" & qual==2, 10, class))
+frq(issp$class)
 
 ## 4.2 Label variable ----------------------------------------------------------
 issp$class <- factor(issp$class,levels = c(1:10),
@@ -84,6 +92,7 @@ issp$class <- factor(issp$class,levels = c(1:10),
                                 "6.Skilled supervisors","7.Unskilled supervisors",
                                 "8.Skilled workers","9.Unskilled workers", "10. Informal self-employed"))
 ## 4.3 Result class ------------------------------------------------------------
+frq(issp$class)
 issp %>% 
   filter(!is.na(class)) %>% 
   count(class) %>% #n de casos
