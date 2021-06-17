@@ -1,7 +1,7 @@
 # Code Paper ----------------------------------------------------------
 # Author: Valentina Andrade
 # 1. Load packages --------------------------------------------------------
-pacman::p_load(tidyverse, sjmisc, sjPlot, magrittr)
+pacman::p_load(tidyverse, sjmisc, sjPlot, magrittr, labelled, lavaan, psych)
 '%!in%' <- function(x,y)!('%in%'(x,y)) #own function
 
 # 2. Load data ------------------------------------------------------------
@@ -23,18 +23,23 @@ frq(issp$TYPORG2) # 8 y 9 NA
 
 # 4. Recode ---------------------------------------------------------------
 issp <- issp %>%
-  mutate(UNION = car::recode(.$UNION, c("c(7,9)=NA")),
+  mutate_at(vars(v45:v47), funs(car::recode(., c("1=0;2=1;3=2;4=3;5=4;c(0,8,9)=NA")))) %>% 
+  mutate_at(vars(v45:v47), funs(labelled(.,c("Strongly agree"=0,"Agree"=1,"Neither agree nor disagree"=2,"Disagree"=3,"Strongly disagree"=4)))) %>% 
+  mutate(v42 = car::recode(.$v42, c("1=0;2=1;3=2;4=3;5=4;c(0,8,9)=NA")),
+         v44 = car::recode(.$v44, c("1=0;2=1;3=2;4=3;5=4;6=5;7=6;c(0,8,9)=NA"))) %>% 
+  mutate(v42 = labelled(.$v42,c("Very good"=0,"Quite good"=1,"Neither good nor bad"=2,"Quite bad"=3,"Very bad"=4)),
+         v44 = labelled(.$v44,c("Completely satisfied"=0,"Very satisfied"=1,"Fairly satisfied"=2,"Neither satisfied nor dissatisfied"=3,"Fairly dissatisfied"=4, "Very dissatisfied"= 5, "Completely dissatisfied" = 6)), 
+        UNION = car::recode(.$UNION, c("c(7,9)=NA")),
          SEX = car::recode(.$SEX, c("9=NA")),
          DEGREE = car::recode(.$DEGREE, c("9=NA")),
          TYPORG2 = car::recode(.$TYPORG2, c("c(8,9)=NA")),
          AGE = car::recode(.$AGE, c("999=NA")),
-         v42 = car::recode(.$v42, c("c(8,9)=NA")),
-         conflict = case_when(v42 %in% c(5,4) ~ 1,
-                              TRUE ~ 0),
+         conflict = case_when(v42 %in% c(4,3) ~ 1,
+                              v42 %in% c(2,1,0) ~ 0), 
          year = 2015) %>% 
 # 5. Select  --------------------------------------------------------------
-select(country, year, SEX, AGE, DEGREE, TYPORG2, UNION, NEMPLOY, EMPREL, WRKSUP, ISCO08, WORK,
-       v42, conflict,
+dplyr::select(country, year, SEX, AGE, DEGREE, TYPORG2, UNION, NEMPLOY, EMPREL, WRKSUP, ISCO08, WORK,
+       v42,v44,v45,v46,v47, conflict, c_alphan,
        WEIGHT) %>% filter(AGE != 0)
 
 # B. Construct class variable ---------------------------------------------
@@ -162,10 +167,89 @@ issp %$%
   tab_xtab(.$TYPORG2, .$conflict,
            statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
 
-# Class-conflict ------------------------------------------------------------
+# Class-all variables ------------------------------------------------------------
+## Class-conflict ------------------------------------------------------------
 issp %$% 
   tab_xtab(.$class, .$conflict,
            statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## Class- conflict items ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$class, .$v42,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+issp %$% 
+  tab_xtab(.$class, .$v44,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+issp %$% 
+  tab_xtab(.$class, .$v45,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+issp %$% 
+  tab_xtab(.$class, .$v46,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+issp %$% 
+  tab_xtab(.$class, .$v47,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## Class- sex ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$class, .$SEX,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## Class- UNION ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$class, .$UNION,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## class-conflict ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$class, .$TYPORG2,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+
+# country-all variables ---------------------------------------------------
+## c_alphan-conflict ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$c_alphan, .$conflict,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## c_alphan- sex ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$c_alphan, .$SEX,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## c_alphan- UNION ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$c_alphan, .$UNION,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+## c_alphan-conflict ------------------------------------------------------------
+issp %$% 
+  tab_xtab(.$c_alphan, .$TYPORG2,
+           statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
+
+
+# Correlation matrix ------------------------------------------------------
+## v42,v44, v45, v46 y v47
+issp %>% select(starts_with("v4")) %>% 
+sjp.corr(.,show.legend = TRUE, title = "Correlation plot")
+
+
+# Test para FA -----------------------------------------------------------------
+# KMO --------------------------------------------------------------------------
+issp %>% select(starts_with("v4")) %>% 
+psych::KMO(.)
+
+# Test de Bartlett -------------------------------------------------------------
+issp %>% select(starts_with("v4")) %>% 
+  psych::cortest.bartlett(.)
+
+# Scree plot -------------------------------------------------------------------
+issp %>% select(starts_with("v4")) %>% 
+scree(.)
 
 # 6. Save  ----------------------------------------------------------------------
 saveRDS(issp, file = "input/data/proc/issp-paper.rds")
