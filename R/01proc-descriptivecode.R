@@ -42,7 +42,7 @@ dplyr::select(country, year, SEX, AGE, DEGREE, TYPORG2, UNION, NEMPLOY, EMPREL, 
        v42,v44,v45,v46,v47, conflict, c_alphan,
        WEIGHT) %>% filter(AGE != 0)
 
-# B. Construct class variable ---------------------------------------------
+# B. Construct class variable --------------------------------------------------
 # 3. Recode variables ----------------------------------------------------------
 # 3.1 Employment relation ------------------------------------------------------
 
