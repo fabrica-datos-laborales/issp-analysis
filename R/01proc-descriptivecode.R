@@ -231,6 +231,19 @@ issp %$%
   tab_xtab(.$c_alphan, .$TYPORG2,
            statistics = "cramer", weight.by = .$WEIGHT, show.row.prc = T)
 
+# Mean by items "v4" class and country ------------------------------------
+
+## By class
+issp %>%
+  group_by(class) %>%
+  summarise_at(vars(starts_with("v4")), funs (weighted.mean(.,WEIGHT,na.rm = T)))
+
+## By country
+
+issp %>%
+  group_by(c_alphan) %>%
+  summarise_at(vars(starts_with("v4")), funs (weighted.mean(.,WEIGHT,na.rm = T))) %>%
+  print(n = 46)
 
 # Correlation matrix ------------------------------------------------------
 ## v42,v44, v45, v46 y v47
@@ -250,6 +263,18 @@ issp %>% select(starts_with("v4")) %>%
 # Scree plot -------------------------------------------------------------------
 issp %>% select(starts_with("v4")) %>% 
 scree(.)
+
+# PCA and Cronbach ---------------------------------------------------------------------
+issp %>%
+  select(starts_with("v4")) %>% 
+tab_pca(., rotation =c("varimax"), 
+        title = "Principal Component Analysis with `v4` items", 
+        string.pov = "Proportion of Variance",
+        string.cpov = "Cumulative Proportion", nmbr.fctr = 2,
+        show.msa = T)
+# By Kaiser criteria is only one principal component
+# We force two componentes with nmbr.fctr = 2
+# cronbach is shown bottom
 
 # 6. Save  ----------------------------------------------------------------------
 saveRDS(issp, file = "input/data/proc/issp-paper.rds")
