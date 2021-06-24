@@ -239,7 +239,6 @@ issp %>%
   summarise_at(vars(starts_with("v4")), funs (weighted.mean(.,WEIGHT,na.rm = T)))
 
 ## By country
-
 issp %>%
   group_by(c_alphan) %>%
   summarise_at(vars(starts_with("v4")), funs (weighted.mean(.,WEIGHT,na.rm = T))) %>%
@@ -275,6 +274,39 @@ tab_pca(., rotation =c("varimax"),
 # By Kaiser criteria is only one principal component
 # We force two componentes with nmbr.fctr = 2
 # cronbach is shown bottom
+
+
+## Factor Analysis (ML) and Alpha Cronbach----------------------------------------
+## Corr
+issp %>%
+  select(starts_with("v4")) %>% 
+  corr.test(., alpha = 0.05,
+            method='pearson')
+
+issp %>%
+  select(starts_with("v4")) %$% 
+  fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted 
+fa.extension(Roe,fo,correct=TRUE)
+
+## otra forma (cada vbe individual; para ir probando)
+issp %>%
+  select(v42, v44, v45, v46, v47) %$% 
+  fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted 
+
+
+## Intento de FA - principal axis
+issp %>%
+  select(v42, v44, v45, v46, v47) %$% 
+  fa(., nfactors = 5, fm = "pa", SMC = FALSE, rotate = "varimax")$Vaccounted 
+
+
+##Alpha cronbach
+issp %>%
+  select(starts_with("v4")) %>% 
+  psych::alpha(.)
+
+
+
 
 # 6. Save  ----------------------------------------------------------------------
 saveRDS(issp, file = "input/data/proc/issp-paper.rds")
