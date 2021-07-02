@@ -277,7 +277,7 @@ tab_pca(., rotation =c("varimax"),
 
 
 ## Factor Analysis (ML) and Alpha Cronbach----------------------------------------
-## Corr
+## Correlation
 issp %>%
   select(starts_with("v4")) %>% 
   corr.test(., alpha = 0.05,
@@ -288,22 +288,33 @@ issp %>%
   fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted 
 fa.extension(Roe,fo,correct=TRUE)
 
+#factor loadings
+f<-issp %>%
+  select(starts_with("v4")) %$% 
+  fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted
+data.frame(unclass(f$loadings), h2=f$communalities, u2= f$uniqueness,com=f$complexity)
+
+
 ## otra forma (cada vbe individual; para ir probando)
 issp %>%
-  select(v42, v44, v45, v46, v47) %$% 
-  fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted 
-
-
-## Intento de FA - principal axis
-issp %>%
-  select(v42, v44, v45, v46, v47) %$% 
-  fa(., nfactors = 5, fm = "pa", SMC = FALSE, rotate = "varimax")$Vaccounted 
+  select(v42,v45,v46,v47) %$% 
+  fa(., nfactors = 1, fm = "ml", rotate = "varimax")$Vaccounted 
 
 
 ##Alpha cronbach
 issp %>%
   select(starts_with("v4")) %>% 
   psych::alpha(.)
+
+##Alpha cronbach & Correlation with selected items
+issp %>%
+  select(v42,v45,v46,v47) %>% 
+  psych::alpha(.)
+
+issp %>%
+  select(v42,v45,v46,v47) %>% 
+  corr.test(., alpha = 0.05,
+            method='pearson')
 
 
 
