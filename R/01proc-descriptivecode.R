@@ -286,12 +286,13 @@ issp %>%
 issp %>%
   select(starts_with("v4")) %$% 
   fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted 
-fa.extension(Roe,fo,correct=TRUE)
 
-#factor loadings
-f<-issp %>%
+
+# Factor loading matrix ---------------------------------------------------
+f <- issp %>%
   select(starts_with("v4")) %$% 
-  fa(., nfactors = 5, fm = "ml", rotate = "varimax")$Vaccounted
+  fa(., nfactors = 5, fm = "ml", rotate = "varimax")
+
 data.frame(unclass(f$loadings), h2=f$communalities, u2= f$uniqueness,com=f$complexity)
 
 
