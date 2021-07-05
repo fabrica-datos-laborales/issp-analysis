@@ -295,35 +295,44 @@ f <- issp %>%
 
 data.frame(unclass(f$loadings), h2=f$communalities, u2= f$uniqueness,com=f$complexity)
 
-# Factor loadings matrix PA -----------------------------------------------
-f <- issp %>%
+
+# Factor analysis (principal axis) ----------------------------------------
+issp %>%
   select(starts_with("v4")) %$% 
   fa(.,  fm = "pa", rotate = "varimax")
 
+## Factr loadings
+f <- issp %>%
+  select(starts_with("v4")) %$% 
+  fa(.,  fm = "pa", rotate = "varimax")
 data.frame(unclass(f$loadings), h2=f$communalities, u2= f$uniqueness,com=f$complexity)
-
 
 
 ## otra forma (cada vbe individual; para ir probando)
 issp %>%
   select(v42,v45,v46,v47) %$% 
-  fa(., nfactors = 1, fm = "ml", rotate = "varimax")$Vaccounted 
+  fa(., fm = "pa", rotate = "varimax") 
 
 
-##Alpha cronbach
+##Alpha cronbach----------------
+
+#Correlation
+issp %>%
+  select(starts_with("v4")) %>% 
+  corr.test(., alpha = 0.05,
+          method='pearson')
+
+#Alpha cronbach 
 issp %>%
   select(starts_with("v4")) %>% 
   psych::alpha(.)
+ 
 
-##Alpha cronbach & Correlation with selected items
+#With different combinations of items (to check)
 issp %>%
   select(v42,v45,v46,v47) %>% 
   psych::alpha(.)
 
-issp %>%
-  select(v42,v45,v46,v47) %>% 
-  corr.test(., alpha = 0.05,
-            method='pearson')
 
 
 
