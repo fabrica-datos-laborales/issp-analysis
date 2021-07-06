@@ -334,7 +334,78 @@ issp %>%
   psych::alpha(.)
 
 
+# PCA with policoric variables --------------------------------------------------------------
+# scale <- issp %>% select(v42,v45,v46,v47)
+#   homals(scale, ndim = 1, level = "ordinal", active = TRUE)
 
+# Mean index --------------------------------------------------------------
+# index_1 con todas las v4* e index_2 solo con indicadas
+
+# 1. Mean index_1 and index_2 by class ----------------------------------------------------------------
+
+issp %>% 
+  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
+  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
+  mutate_at(vars(starts_with("v4")), ~as.numeric(.)+1) %>%
+  mutate_at(vars(starts_with("v4")), ~.*100/7) %>%
+  rowwise() %>% 
+  mutate(index_1 = mean(v42:v47, na.rm =  T),
+         index_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
+  ungroup() %>%
+  group_by(class) %>%
+  summarise_at(vars(starts_with("index")), funs(weighted.mean(.,WEIGHT,na.rm = T)))
+
+# 2. Mean index_1 and index_2 by country -------------------------------------
+issp %>% 
+  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
+  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
+  mutate_at(vars(starts_with("v4")), ~as.numeric(.)+1) %>%
+  mutate_at(vars(starts_with("v4")), ~.*100/7) %>%
+  rowwise() %>% 
+  mutate(index_1 = mean(v42:v47, na.rm =  T),
+         index_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
+  ungroup() %>%
+  group_by(c_alphan) %>%
+  summarise_at(vars(starts_with("index")), funs(weighted.mean(.,WEIGHT,na.rm = T))) %>%
+  print(n = 46)
+
+# Anova -------------------------------------------------------------------
+issp %>% 
+  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
+  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
+  mutate_at(vars(starts_with("v4")), ~as.numeric(.)+1) %>%
+  mutate_at(vars(starts_with("v4")), ~.*100/7) %>%
+  rowwise() %>% 
+  mutate(index_1 = mean(v42:v47, na.rm =  T),
+         index_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
+  ungroup() %>%
+  pivot_longer(., cols = c(index_1, index_2), names_to = "type_index") %$% 
+sjPlot::sjp.aov1(.$value, .$type_index, title = "Anova by type index")
+
+
+# Anova index by class ----------------------------------------------------
+issp %>% 
+  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
+  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
+  mutate_at(vars(starts_with("v4")), ~as.numeric(.)+1) %>%
+  mutate_at(vars(starts_with("v4")), ~.*100/7) %>%
+  rowwise() %>% 
+  mutate(index_1 = mean(v42:v47, na.rm =  T),
+         index_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
+  ungroup()  %$% 
+  sjPlot::sjp.aov1(.$index_2, .$class, title = "Anova index N°2 by class")
+
+# Anova index by class ----------------------------------------------------
+issp %>% 
+  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
+  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
+  mutate_at(vars(starts_with("v4")), ~as.numeric(.)+1) %>%
+  mutate_at(vars(starts_with("v4")), ~.*100/7) %>%
+  rowwise() %>% 
+  mutate(index_1 = mean(v42:v47, na.rm =  T),
+         index_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
+  ungroup()  %$% 
+  sjPlot::sjp.aov1(.$index_2, .$c_alphan, title = "Anova index N°2 by country")
 
 
 # 6. Save  ----------------------------------------------------------------------
