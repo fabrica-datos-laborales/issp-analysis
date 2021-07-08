@@ -355,6 +355,9 @@ issp %>%
   group_by(class) %>%
   summarise_at(vars(starts_with("index")), funs(weighted.mean(.,WEIGHT,na.rm = T)))
 
+                
+
+
 # 2. Mean index_1 and index_2 by country -------------------------------------
 issp %>% 
   select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
@@ -406,6 +409,97 @@ issp %>%
          index_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
   ungroup()  %$% 
   sjPlot::sjp.aov1(.$index_2, .$c_alphan, title = "Anova index N°2 by country")
+
+
+# New scale 1 (prueba) ----------------------------------------------------
+## v44: from 0 - 6 to 0 - 4
+summary(issp$v44)
+
+issp$v44_0_4 <- issp$v44*0.66666666667
+frq(issp$v44_0_4)
+summary(issp$v44_0_4)
+mean(issp$v44_0_4, na.rm = T)
+sd(issp$v44_0_4, na.rm = T)
+
+## Final scale1
+issp$scale1 <- ((issp$v42 + issp$v44_0_4 + issp$v45 + issp$v46 + issp$v47)/20)*100
+frq(issp$scale1)
+summary(issp$scale1)
+mean(issp$scale1, na.rm = T)
+sd(issp$scale1, na.rm = T)
+
+
+## Scale 1 by class (example)-
+issp %>% 
+  group_by(class) %>%
+  filter(!is.na(class)) %>% 
+  summarise(n(),mean=mean(scale1,na.rm = TRUE), sd=sd(scale1,na.rm = TRUE))
+
+##ANOVA Scale1 by class (EXAMPLE)---
+anova_class_scale1 <- aov(scale1~class, data = issp)
+summary(anova_class_scale1)
+
+
+## Scale 1 by country (example)---
+issp %>% 
+  group_by(c_alphan) %>%
+  filter(!is.na(class)) %>% 
+  summarise(n(),mean=mean(scale1,na.rm = TRUE), sd=sd(scale1,na.rm = TRUE))%>%
+  print(n = 40)
+
+##ANOVA Scale1 by country (EXAMPLE)-
+anova_country_scale1 <- aov(scale1~country, data = issp)
+summary(anova_country_scale2)
+
+
+
+# New scale 2 (para probar) -------------------------------------------------
+
+issp$scale2 <- ((issp$v42 + issp$v45 + issp$v46 + issp$v47)/16)*100
+frq(issp$scale2)
+summary(issp$scale2)
+mean(issp$scale2, na.rm = T)
+sd(issp$scale2, na.rm = T)
+
+## Scale 2 by class (example)-
+issp %>% 
+  group_by(class) %>%
+  filter(!is.na(class)) %>% 
+  summarise(n(),mean=mean(scale2,na.rm = TRUE),sd=sd(scale2,na.rm = TRUE))
+
+
+##ANOVA Scale2 by class (EXAMPLE---
+anova_class_scale2 <- aov(scale2~class, data = issp)
+summary(anova_class_scale2)
+
+
+## Scale 2 by country (example)---
+issp %>% 
+  group_by(c_alphan) %>%
+  filter(!is.na(class)) %>% 
+  summarise(n(),mean=mean(scale2,na.rm = TRUE),sd=sd(scale2,na.rm = TRUE))%>%
+  print(n = 40)
+
+
+##ANOVA Scale2 by country (EXAMPLE)-
+anova_country_scale2 <- aov(scale2~country, data = issp)
+summary(anova_country_scale2)
+
+
+
+#Two scales by class and country  --------------------------------------
+##Class
+issp %>% 
+  group_by(class) %>%
+  filter(!is.na(class)) %>% 
+  summarise(n(),mean1=mean(scale1,na.rm = TRUE),mean2=mean(scale2,na.rm = TRUE))
+
+##Country 
+issp %>% 
+  group_by(c_alphan) %>%
+  filter(!is.na(class)) %>% 
+  summarise(n(),mean1=mean(scale1,na.rm = TRUE),mean2=mean(scale2,na.rm = TRUE))%>%
+  print(n = 40)
 
 
 # 6. Save  ----------------------------------------------------------------------
