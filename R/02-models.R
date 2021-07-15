@@ -2,18 +2,19 @@
 rm(list = ls())
 
 # 1. Load packages --------------------------------------------------------
-pacman::p_load(tidyverse)
+pacman::p_load(tidyverse, performance, parameters)
 
 # 2. Load data ------------------------------------------------------------
 issp <- readRDS(file = "input/data/proc/issp-paper.rds")
 
 # 3. Models ---------------------------------------------------------------
 # Define
-model <- lm(scale_2 ~ ., data = issp, weights = issp$"WEIGHT")
+model <- lm(scale_2 ~ .,
+            data = issp, weights = issp$WEIGHT,
+            na.action=na.omit)
 
-summary(model)
+parameters::model_parameters(model)
 
 # Explore combinations of models (stepwise)
-step(model)
-
-
+#step(model, keep = nobs)
+## best model: scale_2 ~ AGE + TYPORG2 + UNION + class + c_alphan
