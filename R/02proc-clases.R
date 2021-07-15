@@ -1,10 +1,8 @@
 # Code 2: Estructura de Clases de E. O Wright ----------------------------------
 # Auhor: Valentina Andrade
 rm(list = ls()) # empty env
-
 # 1. Load packages -------------------------------------------------------------
 pacman::p_load(tidyverse)
-
 '%!in%' <- function(x,y)!('%in%'(x,y)) #own function
 
 # 2. Load data -----------------------------------------------------------------
@@ -13,26 +11,55 @@ issp <- readRDS("input/data/proc/issp-proc.rds")
 # 3. Recode variables ----------------------------------------------------------
 # 3.1 Employment relation ------------------------------------------------------
 
-# A.1 Filter inactive people
-# (1) WORK: Are you currently working for pay, did you work for pay in the past, or have you never been in paid work?
-frq(issp$WORK)
-issp <- filter(issp, WORK != 3) # 8 y 9 NS/NR
+# A.1 Filtrar inactivos
+#Variable WRKTYPE: R: Working for private or public sector or self employed 
+issp <- filter(issp, WORK != 3)
+# --> 3 Never had paid work
 
-# A.2 Create salaried workers
-# (2) EMPREL: Are/ were you an employee, self-employed, or working for your own family's business?
-frq(issp$EMPREL)
-issp$prop_salaried <- as.numeric(issp$EMPREL)
-frq(issp$prop_salaried)
-issp$prop_salaried <- car::recode(issp$prop_salaried,recodes = "1='Salaried';c(5,2)='3.Petite bourgeoisie';3='2.Small employers';4='1.Capitalist';c(8,9)=NA", as.factor = T,
-                                  levels = c("Salaried", "3.Petite bourgeoisie", "2.Small employers","1.Capitalist"))
+# A.2 Crear variable asalariados
+issp$EMPREL <- as.numeric(issp$EMPREL) 
+issp$prop_salariedA <- car::recode(issp$EMPREL,recodes = "c(1,4)='Salaried';2='3.Petite bourgeoisie';3='Employer';c(8,9)=NA")
 
-# 3.2 Salaried workers ---------------------------------------------------------
+# Verificar
+issp %>% count(prop_salariedA) %>% mutate(prop = prop.table(n))
+issp %>% count(EMPREL) %>% mutate(prop = prop.table(n))
+
+
+# 4.2 Propietarios -------------------------------------------------------------
+# Proxy: NEMPLOY (How many employees do/ did you have, not counting yourself?)
+# A.1 Crear variable "owners":
+#1.Pequeña burguesia: 0 a 1 empleados
+#2. Pequeños empleadores: de 2 a 9 empleados
+#3. Capitalist: de 10 a más empleados
+issp$owners <- as.numeric(issp$NEMPLOY)
+issp <- issp %>% mutate(owners = case_when(owners %in% c(10:9995)& prop_salariedA=="Employer"~ "1.Capitalist",
+                                           owners %in% c(2:9, 9999,9998)& prop_salariedA=="Employer" ~ "2.Small employers",                                           owners %in% c(2:9)& prop_salariedA=="Employer" ~ "2.Small employers",
+                                           owners %in% c(1)| prop_salariedA=="3.Petite bourgeoisie"~ "3.Petite bourgeoisie",
+                                           TRUE ~ NA_character_))
+
+# Importante --> hay 1 que indican no tener ni 1 a 9995, indican NA asi que son incorporados en petite bourgoise
+# A.2 Verificar
+issp %>% count(owners) %>% mutate(prop = prop.table(n))
+issp %>% count(NEMPLOY) %>% mutate(prop = prop.table(n))
+
+# A.3 Var final salaried -------------------------------------------------------
+issp <- issp %>% mutate(prop_salaried = if_else(is.na(owners), prop_salariedA, owners))
+
+# A.2 Verificar
+issp %>% count(prop_salaried) %>% mutate(prop = prop.table(n))
+issp %>% count(prop_salariedA) %>% mutate(prop = prop.table(n))
+
+
+# 4.3 Asalariados --------------------------------------------------------------
 # A.1 Supervisan ---------------------------------------------------------------
-# WRKSUP #Do/ did you supervise other employees? Yes/No
-frq(issp$WRKSUP)
-issp$control <- as.numeric(issp$WRKSUP)
-issp$control <- car::recode(issp$control,recodes = "1='Control';2='No control';99=NA",as.factor =T, 
+# Proxy: WRKSUP #Do/ did you supervise other employees? Yes/No
+issp$WRKSUP <- as.numeric(issp$WRKSUP)
+table(issp$WRKSUP)
+issp$control <- car::recode(issp$WRKSUP,recodes = "1='Control';2='No control';99=NA",as.factor =T, 
                             levels = c("Control", "No control"))
+
+# Verificar
+issp %>% count(control) %>% mutate(prop = prop.table(n)) 
 
 # A.2 Skills--------------------------------------------------------------------
 # ISCO08: In your main job, what kind of activities do/ did you do most of the time?
