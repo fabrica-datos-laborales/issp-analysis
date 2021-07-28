@@ -13,7 +13,13 @@ model <- lm(scale_2 ~ .,
             data = issp, weights = issp$WEIGHT,
             na.action=na.omit)
 
+model2 <- lm(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class + c_alphan,
+            data = issp, weights = issp$WEIGHT,
+            na.action=na.omit)
+
 parameters::model_parameters(model)
+
+parameters::model_parameters(model2)
 
 # Explore combinations of models (stepwise)
 #step(model, keep = nobs)
