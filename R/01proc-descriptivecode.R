@@ -154,6 +154,52 @@ issp %>%
   mutate(proporcion = prop.table(n))#proporción
 
 
+## 4.1 Create variable class_2 ---------------------------------------------------------
+issp$class_2<- NA # empty variable
+issp$class_2 <- with(issp, ifelse(prop_salaried=="1.Capitalist", 1, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="2.Small employers", 2, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="3.Petite bourgeoisie" & qual == c(1,2), 3, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Experts", 4, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Experts", 5, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Skilled", 6, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Unskilled", 7, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Skilled", 8, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Unskilled", 9, class_2))
+
+## 4.2 Label variable ----------------------------------------------------------
+issp$class_2 <- factor(issp$class_2,levels = c(1:9),
+                     labels = c("1.Capitalists","2.Small employers","3.Petite bourgeoisie",
+                                "4.Expert managers","5.Nonmanagerial experts",
+                                "6.Skilled supervisors","7.Unskilled supervisors",
+                                "8.Skilled workers","9.Unskilled workers"))
+## 4.3 Result class_2 ------------------------------------------------------------
+issp %>% 
+  filter(!is.na(class_2)) %>% 
+  count(class_2) %>% #n de casos
+  mutate(proporcion = prop.table(n))#proporción
+
+## 4.1 Create variable class_3 ---------------------------------------------------------
+issp$class_3<- NA # empty variable
+issp$class_3 <- with(issp, ifelse(prop_salaried %in% c("1.Capitalist", "2.Small employers","3.Petite bourgeoisie"), 1, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Experts", 2, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Experts", 3, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Skilled", 4, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Unskilled", 5, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Skilled", 6, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Unskilled", 7, class_3))
+
+## 4.2 Label variable ----------------------------------------------------------
+issp$class_3 <- factor(issp$class_3,levels = c(1:7),
+                     labels = c("1.Employers",
+                                "2.Expert managers","3.Nonmanagerial experts",
+                                "4.Skilled supervisors","5.Unskilled supervisors",
+                                "6.Skilled workers","7.Unskilled workers"))
+## 4.3 Result class_3 ------------------------------------------------------------
+issp %>% 
+  filter(!is.na(class_3)) %>% 
+  count(class_3) %>% #n de casos
+  mutate(proporcion = prop.table(n))#proporción
+
 # C. Descriptive analysis ---------------------------------------------------------
 
 # C.1 Univariate --------------------------------------------------------------
@@ -435,7 +481,7 @@ issp %>%
 
 # Create scales -----------------------------------------------------------
 issp <- issp %>% 
-  select(2:7,starts_with("v4"), class, c_alphan, WEIGHT) %>%
+  select(2:7,starts_with("v4"), starts_with("class"), c_alphan, WEIGHT) %>%
   filter_at(vars(v42:v47), all_vars(!is.na(.))) %>%
   mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
   rowwise() %>% 
