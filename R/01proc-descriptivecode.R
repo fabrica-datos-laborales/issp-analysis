@@ -180,20 +180,21 @@ issp %>%
 
 ## 4.1 Create variable class_3 ---------------------------------------------------------
 issp$class_3<- NA # empty variable
-issp$class_3 <- with(issp, ifelse(prop_salaried %in% c("1.Capitalist", "2.Small employers","3.Petite bourgeoisie"), 1, class_3))
-issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Experts", 2, class_3))
-issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Experts", 3, class_3))
-issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Skilled", 4, class_3))
-issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Unskilled", 5, class_3))
-issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Skilled", 6, class_3))
-issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Unskilled", 7, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried %in% c("1.Capitalist", "2.Small employers"), 1, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried == "3.Petite bourgeoisie", 2, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Experts", 3, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Experts", 4, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Skilled", 5, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Unskilled", 6, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Skilled", 7, class_3))
+issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Unskilled", 8, class_3))
 
 ## 4.2 Label variable ----------------------------------------------------------
 issp$class_3 <- factor(issp$class_3,levels = c(1:7),
-                     labels = c("1.Employers",
-                                "2.Expert managers","3.Nonmanagerial experts",
-                                "4.Skilled supervisors","5.Unskilled supervisors",
-                                "6.Skilled workers","7.Unskilled workers"))
+                     labels = c("1.Employers", "2.Petite bourgeoisie",
+                                "3.Expert managers","4.Nonmanagerial experts",
+                                "5.Skilled supervisors","6.Unskilled supervisors",
+                                "7.Skilled workers","8.Unskilled workers"))
 ## 4.3 Result class_3 ------------------------------------------------------------
 issp %>% 
   filter(!is.na(class_3)) %>% 
