@@ -158,7 +158,7 @@ issp %>%
 issp$class_2<- NA # empty variable
 issp$class_2 <- with(issp, ifelse(prop_salaried=="1.Capitalist", 1, class_2))
 issp$class_2 <- with(issp, ifelse(prop_salaried=="2.Small employers", 2, class_2))
-issp$class_2 <- with(issp, ifelse(prop_salaried=="3.Petite bourgeoisie" & qual == c(1,2), 3, class_2))
+issp$class_2 <- with(issp, ifelse(prop_salaried=="3.Petite bourgeoisie", 3, class_2))
 issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Experts", 4, class_2))
 issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Experts", 5, class_2))
 issp$class_2 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="Control" & skills=="Skilled", 6, class_2))
@@ -190,7 +190,7 @@ issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No contr
 issp$class_3 <- with(issp, ifelse(prop_salaried=="Salaried" & control=="No control" & skills=="Unskilled", 8, class_3))
 
 ## 4.2 Label variable ----------------------------------------------------------
-issp$class_3 <- factor(issp$class_3,levels = c(1:7),
+issp$class_3 <- factor(issp$class_3,levels = c(1:8),
                      labels = c("1.Employers", "2.Petite bourgeoisie",
                                 "3.Expert managers","4.Nonmanagerial experts",
                                 "5.Skilled supervisors","6.Unskilled supervisors",
