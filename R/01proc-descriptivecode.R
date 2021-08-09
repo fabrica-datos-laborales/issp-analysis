@@ -55,7 +55,7 @@ issp <- filter(issp, WORK != 3)
 
 # A.2 Crear variable asalariados
 issp$EMPREL <- as.numeric(issp$EMPREL) 
-issp$prop_salariedA <- car::recode(issp$EMPREL,recodes = "c(1,4)='Salaried';2='3.Petite bourgeoisie';3='Employer';c(8,9)=NA")
+issp$prop_salariedA <- car::recode(issp$EMPREL,recodes = "c(1,4)='Salaried';2='Petite bourgeoisie';3='Employer';c(8,9)=NA")
 
 # Verificar
 issp %>% count(prop_salariedA) %>% mutate(prop = prop.table(n))
@@ -71,13 +71,13 @@ issp %>% count(EMPREL) %>% mutate(prop = prop.table(n))
 issp$owners <- as.numeric(issp$NEMPLOY)
 issp <- issp %>% mutate(owners = case_when(owners %in% c(10:9995)& prop_salariedA=="Employer"~ "1.Capitalist",
                                            owners %in% c(2:9, 9999,9998)& prop_salariedA=="Employer" ~ "2.Small employers",                                           owners %in% c(2:9)& prop_salariedA=="Employer" ~ "2.Small employers",
-                                           owners %in% c(1)| prop_salariedA=="3.Petite bourgeoisie"~ "3.Petite bourgeoisie",
+                                           owners %in% c(1)| prop_salariedA=="Petite bourgeoisie"~ "3.Petite bourgeoisie",
                                            TRUE ~ NA_character_))
 
 # Importante --> hay 1 que indican no tener ni 1 a 9995, indican NA asi que son incorporados en petite bourgoise
 # A.2 Verificar
 issp %>% count(owners) %>% mutate(prop = prop.table(n))
-issp %>% count(NEMPLOY) %>% mutate(prop = prop.table(n))
+issp %>% count(NEMPLOY) %>% mutate(prop = prop.table(n)) %>% print(n = 100)
 
 # A.3 Var final salaried -------------------------------------------------------
 issp <- issp %>% mutate(prop_salaried = if_else(is.na(owners), prop_salariedA, owners))
@@ -93,6 +93,10 @@ issp %>% count(prop_salariedA) %>% mutate(prop = prop.table(n))
 issp$control <- as.numeric(issp$WRKSUP)
 issp$control <- car::recode(issp$control,recodes = "1='Control';2='No control';c(8,9)=NA",as.factor =T, 
                             levels = c("Control", "No control"))
+
+issp %>% count(WRKSUP) %>% mutate(prop = prop.table(n))
+issp %>% count(control) %>% mutate(prop = prop.table(n))
+
 
 # A.2 Skills--------------------------------------------------------------------
 # ISCO08: In your main job, what kind of activities do/ did you do most of the time?
@@ -120,7 +124,7 @@ issp$skillsA <- car::recode(issp$isco_2,
                             recodes = "10:26='Experts';c(30,31,32,33,34,35,36,60,61,72)='Skilled'
                                ;c(40,41,42,43, 44,50,51,52,53,54,62,63,70,71,73,74,75,76,76,77,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96)='Unskilled'; 99=NA")
 
-## Control by educ -------------------------------------------------------------
+## Correct skills by educ -------------------------------------------------------------
 issp <- issp %>% mutate(skills = if_else(skillsA =="Experts" & educ=="Yes", "Experts",
                                          if_else(skillsA == "Experts" & educ=="No", "Skilled", skillsA)),
                         qual = case_when(isco_2 %in% c(11:44) ~ 1,
@@ -374,7 +378,7 @@ f <- issp %>%
 data.frame(unclass(f$loadings), h2=f$communalities, u2= f$uniqueness,com=f$complexity)
 
 
-# Factor analysis (principal axis) ----------------------------------------
+######## Factor analysis (PRINCIPAL AXIS) ----------------------------------------
 issp %>%
   select(starts_with("v4")) %$% 
   fa(.,  fm = "pa", rotate = "varimax")
@@ -406,7 +410,7 @@ issp %>%
   psych::alpha(.)
 
 
-#With different combinations of items (to check)
+#With different combinations of items (to check) (SCALE 2)
 issp %>%
   select(v42,v45,v46,v47) %>% 
   psych::alpha(.)
@@ -416,10 +420,58 @@ issp %>%
 # scale <- issp %>% select(v42,v45,v46,v47)
 #   homals(scale, ndim = 1, level = "ordinal", active = TRUE)
 
-# Mean scale --------------------------------------------------------------
-# scale_1 con todas las v4* e scale_2 solo con indicadas
 
-# 1. Mean scale_1 and scale_2 by class ----------------------------------------------------------------
+
+
+
+
+# SCALES: Scale_2 (Pablo): v42,v45,v46,v47-------------------------------------------------------
+
+#Descriptives for each variable, separately
+issp %>% count(v42) %>% mutate(prop = prop.table(n)) #0 to 4
+issp %>% count(v44) %>% mutate(prop = prop.table(n)) #0 to 6
+issp %>% count(v45) %>% mutate(prop = prop.table(n)) #0 to 4
+issp %>% count(v46) %>% mutate(prop = prop.table(n)) #0 to 4
+issp %>% count(v47) %>% mutate(prop = prop.table(n)) #0 to 4
+
+#####Construction of Scale_2: 
+
+issp$scale_2 <- ((issp$v42+issp$v45+issp$v46+issp$v47)/16)*100 
+issp %>% count(scale_2) %>% mutate(prop = prop.table(n)) #0 to 100 
+
+
+#####Descriptives: Scale_2 by CLASS
+issp %>%
+  filter(!is.na(class_2)) %>%
+  group_by(class_2) %>%
+  summarise_at(vars(scale_2), funs (weighted.mean(.,WEIGHT,na.rm = T),n=n()))
+oneway.test(scale_2 ~ class_2, data = issp)
+kruskal.test(scale_2 ~ class_2, data = issp)#non parametric alternative
+
+issp %>%
+  filter(!is.na(class_3)) %>%
+  group_by(class_3) %>%
+  summarise_at(vars(scale_2), funs (weighted.mean(.,WEIGHT,na.rm = T), n=n()))
+oneway.test(scale_2 ~ class_3, data = issp)
+kruskal.test(scale_2 ~ class_3, data = issp)#non parametric alternative  
+
+#####Descriptives: Scale_2 by COUNTRY
+issp %>%
+  filter(!is.na(class)) %>%
+  group_by(c_alphan) %>%
+  summarise_at(vars(Scale_2), funs (weighted.mean(.,WEIGHT,na.rm = T),n=n()))%>%
+  print(n = 46)
+oneway.test(Scale_2 ~ c_alphan, data = issp)
+kruskal.test(Scale_2 ~ c_alphan, data = issp)#non parametric alternative
+
+
+
+
+
+
+# Scales (1 and 2) Valentina ----------------------------------------------
+# scale_1 con todas las v4* e scale_2 solo con indicadas
+# 1. Mean scale_1 and scale_2 by class (Valentina) ----------------------------------------------------------------
 
 issp %>% 
   select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
