@@ -78,7 +78,8 @@ issp <- issp %>%
 
 color_group = setNames(as.character(issp$c_alphan), issp$color_group)
 
-## Ggplot
+# Figure 1 -------------------------------------------------------------------
+## Definitiva
 as.data.frame(ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2"))) %>%
   select(class_2 = group, c_alphan = x, pred = predicted, everything()) %>%
   group_by(class_2) %>% 
@@ -94,42 +95,5 @@ as.data.frame(ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2"))) %>
   coord_flip()  +
   scale_color_grey(start = 0.2, end = 0.5) +
   labs(title = "", x = "Country code (prefix ISO 3166)", y = "Conflict perception scale")
-
-
-# Class without faced -----------------------------------------------------
-
-as.data.frame(ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2"))) %>%
-  select(class_2 = group, c_alphan = x, pred = predicted, everything()) %>%
-  group_by(class_2) %>% 
-  mutate(pred_group = mean(pred)) %>% 
-  ungroup() %>% 
-  ggplot(., aes(x = c_alphan ,  y = pred, color = class_2)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), stat = "identity") +
-  geom_hline(aes(yintercept = mean(pred_group)),
-             linetype = "dashed") +
-  guides(color = F) +
-  coord_flip()  +
-  scale_color_grey(start = 0.2, end = 0.5) +
-  labs(title = "", x = "Country code (prefix ISO 3166)", y = "Conflict perception scale")
-
-
-# Country-class -----------------------------------------------------------
-
-as.data.frame(ggeffects::ggpredict(model2, terms = c("class_2", "c_alphan"))) %>%
-  select(c_alphan = group, class_2 = x, pred = predicted, everything()) %>%
-  group_by(c_alphan) %>% 
-  mutate(pred_group = mean(pred)) %>% 
-  ungroup() %>% 
-  ggplot(., aes(x = class_2 ,  y = pred, color = c_alphan)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), stat = "identity") +
-  geom_hline(aes(yintercept = mean(pred_group)),
-             linetype = "dashed") +
-  facet_wrap(~ c_alphan, nrow = 3, dir = "v") +
-  guides(color = F) +
-  coord_flip()  +
-  scale_color_grey(start = 0.2, end = 0.5) +
-  labs(title = "", x = "Class", y = "Conflict perception scale")
 
 
