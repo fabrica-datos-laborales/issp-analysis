@@ -24,6 +24,7 @@ model2 <- lm(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 + c_alphan,
              data = issp, weights = issp$WEIGHT, na.action=na.omit)
 
 parameters::model_parameters(model)
+summary(model1)
 
 parameters::model_parameters(model2)
 
