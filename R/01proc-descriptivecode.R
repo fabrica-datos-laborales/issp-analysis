@@ -332,7 +332,7 @@ issp %>% select(starts_with("v4")) %>%
   sjp.corr(.,show.legend = TRUE, title = "Correlation plot")
 
 
-# Test para FA -----------------------------------------------------------------
+# TEST FOR FA -----------------------------------------------------------------
 # KMO --------------------------------------------------------------------------
 issp %>% select(starts_with("v4")) %>% 
   psych::KMO(.)
@@ -390,7 +390,7 @@ f <- issp %>%
 data.frame(unclass(f$loadings), h2=f$communalities, u2= f$uniqueness,com=f$complexity)
 
 
-## otra forma (cada vbe individual; para ir probando)
+## Factor analysis (PRINCIPAL AXIS, SCALE_2 VARIABLES ONLT) ----------
 issp %>%
   select(v42,v45,v46,v47) %$% 
   fa(., fm = "pa", rotate = "varimax") 
@@ -400,26 +400,13 @@ issp %>%
 
 #Correlation
 issp %>%
-  select(starts_with("v4")) %>% 
+  select(v42,v45,v46,v47) %>% 
   corr.test(., alpha = 0.05,
             method='pearson')
 
-#Alpha cronbach 
-issp %>%
-  select(starts_with("v4")) %>% 
-  psych::alpha(.)
-
-
-#With different combinations of items (to check) (SCALE 2)
 issp %>%
   select(v42,v45,v46,v47) %>% 
   psych::alpha(.)
-
-
-# PCA with policoric variables --------------------------------------------------------------
-# scale <- issp %>% select(v42,v45,v46,v47)
-#   homals(scale, ndim = 1, level = "ordinal", active = TRUE)
-
 
 
 
@@ -440,7 +427,7 @@ issp$scale_2 <- ((issp$v42+issp$v45+issp$v46+issp$v47)/16)*100
 issp %>% count(scale_2) %>% mutate(prop = prop.table(n)) #0 to 100 
 
 
-#####Descriptives: Scale_2 by CLASS
+#####Descriptives: Scale_2 by CLASS--------------
 issp %>%
   filter(!is.na(class_2)) %>%
   group_by(class_2) %>%
@@ -459,90 +446,13 @@ kruskal.test(scale_2 ~ class_3, data = issp)#non parametric alternative
 issp %>%
   filter(!is.na(class)) %>%
   group_by(c_alphan) %>%
-  summarise_at(vars(Scale_2), funs (weighted.mean(.,WEIGHT,na.rm = T),n=n()))%>%
+  summarise_at(vars(scale_2), funs (weighted.mean(.,WEIGHT,na.rm = T),n=n()))%>%
   print(n = 46)
-oneway.test(Scale_2 ~ c_alphan, data = issp)
-kruskal.test(Scale_2 ~ c_alphan, data = issp)#non parametric alternative
+oneway.test(scale_2 ~ c_alphan, data = issp)
+kruskal.test(scale_2 ~ c_alphan, data = issp)#non parametric alternative
 
 
 
-
-
-
-# Scales (1 and 2) Valentina ----------------------------------------------
-# scale_1 con todas las v4* e scale_2 solo con indicadas
-# 1. Mean scale_1 and scale_2 by class (Valentina) ----------------------------------------------------------------
-
-issp %>% 
-  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
-  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>%
-  mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
-  rowwise() %>% 
-  mutate(scale_1 = mean(v42:v47, na.rm =  T),
-         scale_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
-  ungroup() %>%
-  group_by(class) %>%
-  summarise_at(vars(starts_with("scale")), funs(weighted.mean(.,WEIGHT,na.rm = T)))
-
-# 2. Mean scale_1 and scale_2 by country -------------------------------------
-issp %>% 
-  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
-  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
-  mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
-  rowwise() %>% 
-  mutate(scale_1 = mean(v42:v47, na.rm =  T),
-         scale_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
-  ungroup() %>%
-  group_by(c_alphan) %>%
-  summarise_at(vars(starts_with("scale")), funs(weighted.mean(.,WEIGHT,na.rm = T))) %>%
-  print(n = 46)
-
-# Anova -------------------------------------------------------------------
-issp %>% 
-  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
-  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
-  mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
-  rowwise() %>% 
-  mutate(scale_1 = mean(v42:v47, na.rm =  T),
-         scale_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
-  ungroup() %>%
-  pivot_longer(., cols = c(scale_1, scale_2), names_to = "type_scale") %$% 
-  sjPlot::sjp.aov1(.$value, .$type_scale, title = "Anova by type scale")
-
-
-# Anova scale by class ----------------------------------------------------
-issp %>% 
-  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
-  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
-  mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
-  rowwise() %>% 
-  mutate(scale_1 = mean(v42:v47, na.rm =  T),
-         scale_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
-  ungroup()  %$% 
-  sjPlot::sjp.aov1(.$scale_2, .$class, title = "Anova scale N°2 by class")
-
-# Anova scale by country ----------------------------------------------------
-issp %>% 
-  select(starts_with("v4"), class, c_alphan, WEIGHT) %>%
-  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>% 
-  mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
-  rowwise() %>% 
-  mutate(scale_1 = mean(v42:v47, na.rm =  T),
-         scale_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
-  ungroup()  %$% 
-  sjPlot::sjp.aov1(.$scale_2, .$c_alphan, title = "Anova scale N°2 by country")
-
-# Create scales -----------------------------------------------------------
-issp <- issp %>% 
-  select(2:7,starts_with("v4"), starts_with("class"), c_alphan, WEIGHT) %>%
-  filter_at(vars(v42:v47), all_vars(!is.na(.))) %>%
-  mutate_at(vars(starts_with("v4")), ~.*100/6) %>%
-  rowwise() %>% 
-  mutate(scale_1 = mean(v42:v47, na.rm =  T),
-         scale_2 = mean(c(v42,v45,v46,v47),  na.rm =  T)) %>%
-  ungroup() %>% 
-  mutate_at(vars(3:7, -AGE), ~as_factor(.)) %>% 
-  select(-starts_with("v4"), -scale_1)
 
 # 6. Save  ----------------------------------------------------------------------
 saveRDS(issp, file = "input/data/proc/issp-paper.rds")

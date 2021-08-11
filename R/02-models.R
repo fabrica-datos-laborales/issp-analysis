@@ -2,43 +2,20 @@
 rm(list = ls())
 
 # 1. Load packages --------------------------------------------------------
-pacman::p_load(tidyverse, sjPlot,  performance, parameters, estimatr)
+pacman::p_load(tidyverse, sjPlot,  performance, parameters, estimatr, apaTables, stargazer)
 ggplot2::theme_set(theme_sjplot2())
-
-# ¿que es estimatr?
 
 # 2. Load data ------------------------------------------------------------
 issp <- readRDS(file = "input/data/proc/issp-paper.rds")
 
 # 3. Models ---------------------------------------------------------------
-# Define
-model <- lm(scale_2 ~ .,
-            data = issp, weights = issp$WEIGHT,
-            na.action=na.omit)
-
-#Models 1 without clustered SE
+#Model 1 without clustered SE
 #Model 1 (class_2)
 model1 <- lm(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 + c_alphan,
              data = issp, weights = issp$WEIGHT, na.action=na.omit)
-model2 <- lm(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 + c_alphan,
-             data = issp, weights = issp$WEIGHT, na.action=na.omit)
 
-parameters::model_parameters(model)
+parameters::model_parameters(model1)
 summary(model1)
-
-parameters::model_parameters(model2)
-
-# Explore combinations of models (stepwise)
-#step(model, keep = nobs)
-## best model: scale_2 ~ AGE + TYPORG2 + UNION + class + c_alphan
-
-
-# #Model 1A (class_3) -----------------------------------------------------
-model1A <- lm(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_3 + c_alphan,
-              data = issp, weights = issp$WEIGHT,
-              na.action=na.omit)
-summary(model1A)
-parameters::model_parameters(model1A)
 
 
 #Models 1 WITH clustered SE
@@ -49,15 +26,41 @@ model1_cse <-estimatr::lm_robust(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 
 summary(model1_cse)
 parameters::model_parameters(model1_cse)
 
-#Model 1A (class_3)
-model1A_cse <-estimatr::lm_robust(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_3 + c_alphan,
-                                  data = issp, weights = issp$WEIGHT,
-                                  clusters = c_alphan)
-summary(model1A_cse)
-parameters::model_parameters(model1A_cse)
+#  Table
+apa.reg.table(model1_cse)
+apa.reg.table(model1_cse,filename="Table_model1_cse.doc") #Doesn't work
+
+stargazer(model1_cse,
+          type="html",
+          out="star_linear.doc") #No funciona con ESTIMATR
+
+# se hace igual con MODEL 1 para probar
+stargazer(model1,
+          type="html",
+          out="Model1.doc",
+          intercept.bottom = T,
+          intercept.top = F,
+          ci = F, digits=3,
+          notes = "XXXXXX",
+          model.names = T,
+          single.row = T)
 
 
-# 4. Graphs ---------------------------------------------------------------
+# OTRO ejempolo más completo: 
+stargazer(model1,
+          type="html",
+          out="Model1.doc",
+          intercept.bottom = T,
+          intercept.top = F,
+          ci = F, digits=2,
+          notes = "XXXXXX",
+          model.names = T,
+          single.row = T,
+          covariate.labels = c("Age", "Sex", "Private sector", "Previously unionized",
+                               "Never unionized", "Small employers", "PB", "etc", "etc"))
+
+
+# 4. Figures  ---------------------------------------------------------------
 ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2")) %>% 
   plot(.,facet = T, color = "greyscale",
        ci.style = "errorbar") +
