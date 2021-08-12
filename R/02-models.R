@@ -9,7 +9,7 @@ ggplot2::theme_set(theme_sjplot2())
 issp <- readRDS(file = "input/data/proc/issp-paper.rds")
 
 # 3. Models ---------------------------------------------------------------
-#Model 1 without clustered SE
+#Model 1 without clustered SE----------
 #Model 1 (class_2)
 model1 <- lm(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 + c_alphan,
              data = issp, weights = issp$WEIGHT, na.action=na.omit)
@@ -18,7 +18,7 @@ parameters::model_parameters(model1)
 summary(model1)
 
 
-#Models 1 WITH clustered SE
+#Models 1 WITH CLUSTERED SE----------
 #Model 1 (class_2)
 model1_cse <-estimatr::lm_robust(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 + c_alphan,
                                  data = issp, weights = issp$WEIGHT,
@@ -26,16 +26,15 @@ model1_cse <-estimatr::lm_robust(scale_2 ~ AGE + SEX+ TYPORG2 + UNION + class_2 
 summary(model1_cse)
 parameters::model_parameters(model1_cse)
 
-#  Table
-apa.reg.table(model1_cse)
-apa.reg.table(model1_cse,filename="Table_model1_cse.doc") #Doesn't work
+
+###  TableS----------
 
 stargazer(model1_cse,
           type="html",
           out="star_linear.doc") #No funciona con ESTIMATR
 
 # se hace igual con MODEL 1 para probar
-stargazer(model1,
+stargazer(model1_cse,
           type="html",
           out="Model1.doc",
           intercept.bottom = T,
@@ -59,16 +58,36 @@ stargazer(model1,
           covariate.labels = c("Age", "Sex", "Private sector", "Previously unionized",
                                "Never unionized", "Small employers", "PB", "etc", "etc"))
 
+#Otras formas para lm 
+apa.reg.table(model1_cse)
+apa.reg.table(model1_cse,filename="Table_model1_cse.doc") #Doesn't work
+
 
 # 4. Figures  ---------------------------------------------------------------
-ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2")) %>% 
+#1- Predicted values for each classes, based on coef of model1_cse
+ggeffects::ggpredict(model1_cse, terms = c("class_2")) %>% 
+  plot(., color = "greyscale",
+       ci.style = "errorbar") +
+  labs(title = "", x = "", y = "Perception of conflict") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, size = 12),
+        axis.text.y = element_text(vjust = 0.5, size = 12))+
+   scale_y_continuous(breaks=c(5,10,15,20,25), limits = c(5,30))
+
+
+#1.a :another option BARRAS
+
+###PENDIENTE
+
+### otros graficos para país y año
+
+ggeffects::ggpredict(model1_cse, terms = c("c_alphan", "class_2")) %>% 
   plot(.,facet = T, color = "greyscale",
        ci.style = "errorbar") +
   coord_flip() +
   labs(title = "", x = "Country code (prefix ISO 3166)", y = "Conflict perception scale")
 
 
-ggeffects::ggpredict(model2, terms = c("c_alphan[CL, VE, US, MX]", "class_2")) %>% 
+ggeffects::ggpredict(model1_cse, terms = c("c_alphan[CL, VE, US, MX]", "class_2")) %>% 
   plot(.,facet = T, color = "bw",
        ci.style = "errorbar") +
   coord_flip() +
@@ -84,7 +103,7 @@ color_group = setNames(as.character(issp$c_alphan), issp$color_group)
 
 # Figure 1 -------------------------------------------------------------------
 ## Definitiva
-as.data.frame(ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2"))) %>%
+as.data.frame(ggeffects::ggpredict(model1_cse, terms = c("c_alphan", "class_2"))) %>%
   select(class_2 = group, c_alphan = x, pred = predicted, everything()) %>%
   group_by(class_2) %>% 
   mutate(pred_group = mean(pred)) %>% 
@@ -98,6 +117,6 @@ as.data.frame(ggeffects::ggpredict(model2, terms = c("c_alphan", "class_2"))) %>
   guides(color = F) +
   coord_flip()  +
   scale_color_grey(start = 0.2, end = 0.5) +
-  labs(title = "", x = "Country code (prefix ISO 3166)", y = "Conflict perception scale")
+  labs(title = "", x = "Country code", y = "Perception of conflict")
 
 
